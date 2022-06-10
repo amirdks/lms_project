@@ -10,8 +10,9 @@
  * Copyright 2011-2019 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  */
-@import url(fonts.css);
 
+
+@import url(fonts.css);
 :root {
   --blue: #007bff;
   --indigo: #6610f2;
@@ -70,6 +71,7 @@ body {
   text-align: left;
   background-color: #ffffff;
 }
+
 
 [tabindex="-1"]:focus:not(:focus-visible) {
   outline: 0 !important;
@@ -31095,4 +31097,4 @@ a.text-muted:hover {
 [class*="accent-"] a.btn-dark {
   color: #ffffff;
 }
-/*# sourceMappingURL=admin.css.map */
+/*# sourceMappingURL=adminlte.css.map */

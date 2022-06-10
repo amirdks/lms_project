@@ -26,6 +26,6 @@ urlpatterns = [
                   path('lessons/', include('lessons.urls')),
                   path('management-panel/', include('management_panel_module.urls')),
                   path('admin/', admin.site.urls, name='admin_info_page'),
-              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+              ]
 
 handler404 = 'home_module.views.not_found'
