@@ -2,8 +2,9 @@
 {% load static %}
 {% load thumbnail %}
 {% load jalali_tags %}
+{% load poll_extras %}
 {% block title %}
-    پنل مدیریت
+    جزئیات تکلیف
 {% endblock %}
 
 {% block content %}
@@ -63,6 +64,38 @@
                         <td></td>
                         <td></td>
                     </tr>
+                    <tr>
+                        <td><b>حداکثر حجم مجاز</b></td>
+                        <td>{{ home_work.max_size }} مگابایت</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td><b>فرمت های مجاز</b></td>
+                        <td>{{ allowed_formats }}</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td><b>مربوط به پودمان یا نوبت</b></td>
+                        <td>{{ home_work.poodeman_or_nobat }}</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td><b>نمره معلم</b></td>
+                        <td>{% if home_works.score %}
+                        {{ home_works.score }} از {{ home_work.score_weight }}
+                            {% else %}
+                            هنوز نمره داده نشده است
+                        {% endif %} </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                     </tbody>
                 </table>
             </div>
@@ -73,15 +106,27 @@
         <!-- this row will not appear when printing -->
         <div class="row">
             <div class="col-12">
-                {% if not request.user.is_teacher and not home_works.is_delivered and not home_work.is_finished %}
+                {% if not request.user.is_teacher and not home_work.is_finished %}
                     <form method="post" action="{% url 'home_work_page' id=lesson.id pk=home_work.pk %} "
                           enctype="multipart/form-data">
                         {% csrf_token %}
-                        <input name="file" class="btn btn-primary float-right" type="file" value="ارسال">
+                        <input class="btn btn-primary float-right" name="file" type="file" value="ارسال"
+                               id="formFileMultiple" accept="{{ allowed_formats }}" multiple/>
                         <br>
+                        <hr>
+                        <label class="form-label">درج پیام برای تکلیف</label>
+                        {% if home_works %}
+                        <input value="{{ home_works.message }}" name="message" class="form-control" type="text" disabled>
+                            {% else %}
+                            <input name="message" class="form-control" type="text">
+                        {% endif %}
                         <hr>
                         <button class="btn btn-success float-right" type="submit"> ارسال</button>
                     </form>
+                    {% if form.errors %}{% for field in form %}{% for error in field.errors %}
+                        <strong class="text-danger">{{ error|escape }}</strong>
+                    {% endfor %}{% endfor %}{% endif %}
+
                 {% elif request.user.is_teacher %}
                     <div class="alert alert-warning"><p>شما معلم هستید و نمیتوانید تکلیفی ارسال کنید </p></div>
                     <a class="btn btn-danger btn-sm"
@@ -97,21 +142,20 @@
                         ویرایش
                     </a>
                     <hr>
-                {% elif home_works.is_delivered %}
-                    <div class="alert alert-warning"><p>شما از قبل تکلیف خود را ارسال کرده اید</p></div>
                 {% elif home_work.is_finished %}
                     <div class="alert alert-danger"><p>مهلت ارسال تکلیف به پایان رسیده</p></div>
                 {% endif %}
                 {% if home_works and not request.user.is_teacher %}
                     <p>
-                        <a href="{{ home_works.file.url }}" download="{{ home_works.file.url }}"
-                           class="btn btn-primary btn-sm"><i
-                                class="fas fa-download"></i>
-                            دانلود تکلیف تحویل داده شده</a>
-                        <a href="{% url 'delete_sent_home_work' id=lesson.id pk=home_work.id %}"
-                           class="btn btn-danger btn-sm"><i
-                                class="fas fa-trash"></i>
-                            حذف تکلیف تحویل داده شده</a>
+                    <p>تکالیف تحویل داده شده :</p>
+                    <ul>
+                        {% for file in home_works.homeworkfiles_set.all %}
+                        <li><a download="{{ file.file.url }}" href="{{ file.file.url }}">{{ file.file.name | file_name }}</a>
+                        <a style="font-size: 12px;" href="{% url 'delete_sent_home_work' id=lesson.id pk=file.id %}"
+                           class="text-danger">
+                            حذف تکلیف </a></li>
+                        {% endfor %}
+                    </ul>
                     </p>
                 {% elif request.user.is_teacher %}
                     <p><a href="{% url 'list-sent-home-works' id=lesson.id  pk=home_work.id %}" class="btn btn-default"><i
@@ -121,11 +165,19 @@
             </div>
             {% if messages %}
                 {% for message in messages %}
-                    <div class="alert alert-success alert-dismissible">
-                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-                        <h5><i class="icon fas fa-check"></i> موفق</h5>
-                        {{ message }}
-                    </div>
+                    {% if message.tags == 'error' %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            <h5><i class="icon fas fa-multiply"></i> ارور</h5>
+                            {{ message }}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible">
+                            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                            <h5><i class="icon fas fa-check"></i> موفق</h5>
+                            {{ message }}
+                        </div>
+                    {% endif %}
                 {% endfor %}
             {% endif %}
         </div>

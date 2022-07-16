@@ -87,7 +87,9 @@ class EditUserInfo(LoginRequiredMixin, View):
         return render(request, 'account_module/edit_user_info.html', context)
 
 
-class EditUserPass(View):
+class EditUserPass(LoginRequiredMixin, View):
+    login_url = reverse_lazy('login_page')
+
     def get(self, request: HttpRequest):
         user: User = User.objects.filter(id=request.user.id).first()
         form = EditUserPassForm()
@@ -109,7 +111,7 @@ class EditUserPass(View):
                 return redirect(reverse('login_page'))
             else:
                 form.add_error('current_password', 'کلمه عبور وارد شده اشتباه می باشد')
-                messages.error(request, 'کلمه عبور وارد شده اشتباه می باشد')
+                # messages.error(request, 'کلمه عبور وارد شده اشتباه می باشد')
         form = EditUserPassForm()
         context = {
             'form': form,
@@ -136,7 +138,8 @@ class LoginView(View):
         if login_form.is_valid():
             user_name_or_email = login_form.cleaned_data.get('name')
             user_password = login_form.cleaned_data.get('password')
-            user = User.objects.filter(Q(username__exact=user_name_or_email)|Q(email__exact=user_name_or_email)).first()
+            user = User.objects.filter(
+                Q(username__exact=user_name_or_email) | Q(email__exact=user_name_or_email)).first()
             if user:
                 is_password_correct = user.check_password(user_password)
                 if is_password_correct:
@@ -144,11 +147,10 @@ class LoginView(View):
                     return redirect(reverse('management_panel_page'))
                 else:
                     login_form.add_error(field='password', error='کلمه عبور اشتباه است')
-                    messages.error(request, 'کلمه عبور اشتباه است')
+                    # messages.error(request, 'کلمه عبور اشتباه است')
             else:
                 login_form.add_error(field='name', error='کاربری با مشخصات وارد شده یافت نشد')
-                messages.error(request, 'کاربری با مشخصات وارد شده یافت نشد')
-        login_form = LoginForm()
+                # messages.error(request, 'کاربری با مشخصات وارد شده یافت نشد')
         contex = {
             'login_form': login_form
         }
@@ -192,6 +194,8 @@ class ResetPasswordView(View):
         user: User = User.objects.filter(email_active_code__iexact=active_code).first()
         if user is None:
             return redirect(reverse('login_page'))
+        elif request.user.is_authenticated:
+            return redirect(reverse('lessons_list_page'))
 
         reset_pass_form = ResetPasswordForm()
 
